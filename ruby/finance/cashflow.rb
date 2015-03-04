@@ -1,4 +1,5 @@
 require "Date"
+require "forwardable"
 
 module CashFlow
 
@@ -30,6 +31,11 @@ module CashFlow
   end
 
   class CashFlow
+
+    extend Forwardable
+
+    def_delegators :@series, :each, :[]
+
     def initialize(series)
       @series = series
     end
