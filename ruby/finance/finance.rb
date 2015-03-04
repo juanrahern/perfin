@@ -15,4 +15,27 @@ module Finance
     return npv
   end
 
+  def loanMonthlyPaymentCashFlow(principal, numMonths, yearlyInterestRate, t0)
+    t0EndOfMonth = DateTime.new(t0.year, t0.month, -1)
+    i = yearlyInterestRate / 12.0
+    payment = principal*i*(1+i)**numMonths / ((1+i)**numMonths - 1)
+    series = []
+    (0..numMonths-1).each do |n|
+      series << CashFlow::Sample.new(t0EndOfMonth >> n, payment)
+    end
+    return CashFlow::CashFlow.new(series)
+  end
+
+  def loanMonthlyInterestCashFlow(principal, numMonths, yearlyInterestRate, t0)
+    t0EndOfMonth = DateTime.new(t0.year, t0.month, -1)
+    i = yearlyInterestRate / 12.0
+    payment = principal*i*(1+i)**numMonths / ((1+i)**numMonths - 1)
+    series = []
+    (1..numMonths).each do |n|
+      interest = payment - payment*(1+i)**(n-1) + principal*i*(i+1)**(n-1)
+      series << CashFlow::Sample.new(t0EndOfMonth >> n, interest)
+    end
+    return CashFlow::CashFlow.new(series)
+  end
+
 end # Finance module
