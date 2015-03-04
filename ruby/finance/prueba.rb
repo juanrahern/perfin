@@ -31,7 +31,8 @@ puts cf1.roundToBeginningOfYear.to_s
 puts '------- NPV --------'
 puts "NPV = #{npvMonthly(cf2, DateTime.now, 0.1)}"
 puts '------- Loan --------'
-puts loanMonthlyPaymentCashFlow(400000, 25*12, 0.03, DateTime.now)
+mortgage = Finance::Mortgage.new(400000, 30*12, 0.03)
+puts mortgage.monthlyPaymentCashFlow(DateTime.now)
 puts '---------------------'
-puts loanMonthlyInterestCashFlow(400000, 25*12, 0.03, DateTime.now)
+puts mortgage.monthlyInterestCashFlow(DateTime.now)
 
