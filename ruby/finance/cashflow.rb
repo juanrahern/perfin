@@ -1,4 +1,6 @@
-module Cashflow
+require "Date"
+
+module CashFlow
 
   class Sample
     attr_reader :time, :value
@@ -8,84 +10,41 @@ module Cashflow
       @time = time
       @value = value
     end
+
+    def roundToEndOfMonth
+      Sample.new(DateTime.new(@time.year, @time.month, -1), @value)
+    end
+
+    def roundToBeginningOfMonth
+      Sample.new(DateTime.new(@time.year, @time.month, 1), @value)
+    end
+
+    def roundToEndOfYear
+      Sample.new(DateTime.new(@time.year, 12, -1), @value)
+    end
+
+    def roundToBeginningOfYear
+      Sample.new(DateTime.new(@time.year, 1, 1), @value)
+    end
+
   end
 
-  class Cashflow
-    attr_reader :series
-
+  class CashFlow
     def initialize(series)
       @series = series
     end
 
-    def to_s
-      str = ''
-      @series.each do |sample|
-        str += "t=#{sample.time}; v=#{sample.value}\n"
-      end
-      return str
-    end
+    protected #------------------------------------------------------
 
-    def roundToEndOfMonth
+    def quantize(quantize)
       newSeries = []
       @series.each do |sample|
-        t = sample.time
-        newSample = Sample.new(DateTime.new(t.year, t.month, -1), sample.value)
-        lastSample = newSeries[-1]
-        if lastSample && (newSample.time == lastSample.time)
-          lastSample.value += newSample.value
-        else
-          newSeries << newSample
-        end
+        newSeries << sample.send(quantize)
       end
       return self.class.new(newSeries)
     end
 
-    def roundToBeginningOfMonth
-      newSeries = []
-      @series.each do |sample|
-        t = sample.time
-        newSample = Sample.new(DateTime.new(t.year, t.month, 1), sample.value)
-        lastSample = newSeries[-1]
-        if lastSample && (newSample.time == lastSample.time)
-          lastSample.value += newSample.value
-        else
-          newSeries << newSample
-        end
-      end
-      return self.class.new(newSeries)
-    end
-
-    def roundToEndOfYear
-      newSeries = []
-      @series.each do |sample|
-        t = sample.time
-        newSample = Sample.new(DateTime.new(t.year, 12, -1), sample.value)
-        lastSample = newSeries[-1]
-        if lastSample && (newSample.time == lastSample.time)
-          lastSample.value += newSample.value
-        else
-          newSeries << newSample
-        end
-      end
-      return self.class.new(newSeries)
-    end
-
-    def roundToBeginningOfYear
-      newSeries = []
-      @series.each do |sample|
-        t = sample.time
-        newSample = Sample.new(DateTime.new(t.year, 1, 1), sample.value)
-        lastSample = newSeries[-1]
-        if lastSample && (newSample.time == lastSample.time)
-          lastSample.value += newSample.value
-        else
-          newSeries << newSample
-        end
-      end
-      return self.class.new(newSeries)
-    end
-
-    def consolidateDaily
+    def consolidate    # Assumes samples are in cronological order
       newSeries = []
       @series.each do |sample|
         lastSample = newSeries[-1]
@@ -98,34 +57,47 @@ module Cashflow
       return self.class.new(newSeries)
     end
 
-    def +(cf)
-      series1 = self.series
-      series2 = cf.series
+    def quantizeAndConsolidate(quantize)
       newSeries = []
-      while (series1 != []) || (series2 != []) do
+      @series.each do |sample|
+        t = sample.time
+        newSample = sample.send(quantize)
         lastSample = newSeries[-1]
-        if series1 == []
-          nextSample = series2.shift
+        if lastSample && (newSample.time == lastSample.time)
+          lastSample.value += newSample.value
         else
-          if series2 == []
-            nextSample = series1.shift
-          else
-            if series1[0].time < series2[0].time
-              nextSample = series1.shift
-            else
-              nextSample = series2.shift
-            end
-          end
-        end
-        if lastSample && (lastSample.time == nextSample.time)
-          lastSample.value += nextSample.value
-        else
-          newSeries << nextSample
+          newSeries << newSample
         end
       end
       return self.class.new(newSeries)
     end
 
-  end
+    public #---------------------------------------------------------
 
-end
+    def to_s
+      s = ""
+      @series.each do |sample|
+        s += "t=#{sample.time}, v=#{sample.value}\n"
+      end
+      return s
+    end
+
+    def roundToEndOfMonth
+      self.quantizeAndConsolidate(:roundToEndOfMonth)
+    end
+
+    def roundToBeginningOfMonth
+      self.quantizeAndConsolidate(:roundToBeginningOfMonth)
+    end
+
+     def roundToEndOfYear
+      self.quantizeAndConsolidate(:roundToEndOfYear)
+    end
+
+    def roundToBeginningOfYear
+      self.quantizeAndConsolidate(:roundToBeginningOfYear)
+    end
+
+  end #CashFlow class
+
+end #CashFlow module
