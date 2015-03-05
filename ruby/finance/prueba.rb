@@ -1,6 +1,7 @@
 require "Date"
 require_relative "cashflow"
-require_relative "./finance.rb"
+require_relative "finance.rb"
+require_relative "../banks/bankia.rb"
 
 extend Finance
 
@@ -30,9 +31,13 @@ puts '------- Round to beginning of year ------'
 puts cf1.roundToBeginningOfYear.to_s
 puts '------- NPV --------'
 puts "NPV = #{npvMonthly(cf2, DateTime.now, 0.1)}"
-puts '------- Loan --------'
-mortgage = Finance::Mortgage.new(400000, 30*12, 0.03)
-puts mortgage.monthlyPaymentCashFlow(DateTime.now)
-puts '---------------------'
-puts mortgage.monthlyInterestCashFlow(DateTime.now)
-
+#puts '------- Loan --------'
+#mortgage = Finance::Mortgage.new(400000, 30*12, 0.03)
+#puts mortgage.monthlyPaymentCashFlow(DateTime.now)
+#puts '---------------------'
+#puts mortgage.monthlyInterestCashFlow(DateTime.now)
+puts '------- bank account transaction parsing --------'
+parser = Bankia::Parser.new("/home/jhernand/Development/perfin.git/ruby/finance/bankia_transactions.txt")
+parser.extractTransactions
+puts "Extracted #{parser.numberOfExtractedTransactions} transactions from file"
+puts parser.to_cashFlow
